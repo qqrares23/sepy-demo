@@ -127,4 +127,4 @@
   html {
     @apply font-sans;
     }
-}
+}\n.font-headline { font-family: 'Space Grotesk', sans-serif; }\n\n.glass-panel { background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(24px); }\n\n.text-glow { text-shadow: 0 0 24px rgba(129, 236, 255, 0.22); }\n\n.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }\n
