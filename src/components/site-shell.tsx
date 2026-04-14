@@ -35,7 +35,7 @@ export function SiteShell() {
         </div>
       </header>
 
-      <main className="min-h-screen bg-[#0b0e11] md:pl-[18rem] pt-24 pb-12">
+      <main className="min-h-screen bg-[#0b0e11] md:pl-[18rem] pt-24 pb-32 md:pb-12">
         <div className="mx-auto max-w-7xl px-6">
           <Outlet />
         </div>
