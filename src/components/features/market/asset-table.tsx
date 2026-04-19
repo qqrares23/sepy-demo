@@ -237,9 +237,9 @@ export const AssetTable = ({ assets, history, prices, setSelectedAsset, onAddSym
                       </div>
                     </TableCell>
                     <TableCell className="px-4 md:px-8 py-6 text-right">
-                      <Button 
+                      <Button
                         onClick={() => setSelectedAsset(asset)}
-                        className="rounded-lg md:rounded-xl bg-[#1c2024] border border-white/10 text-[9px] md:text-[10px] font-bold uppercase tracking-widest hover:bg-[#81ecff] hover:text-[#003840] hover:border-[#81ecff] transition-all px-3 md:px-6 h-8 md:h-10"
+                        className="rounded-lg md:rounded-xl bg-[#81ecff]/15 border border-[#81ecff]/40 text-[#81ecff] text-[9px] md:text-[10px] font-bold uppercase tracking-widest hover:bg-[#81ecff] hover:text-[#003840] hover:border-[#81ecff] transition-all px-3 md:px-6 h-8 md:h-10 shadow-[0_0_12px_rgba(129,236,255,0.15)]"
                       >
                         Trade
                       </Button>

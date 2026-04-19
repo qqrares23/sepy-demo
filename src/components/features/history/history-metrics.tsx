@@ -23,7 +23,7 @@ export function HistoryMetrics({ transactions = [] }: { transactions: Transactio
     <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <MetricCard
         icon="receipt_long"
-        iconColorClass="text-[#81ecff] bg-[#81ecff]"
+        iconColorClass="text-[#81ecff] bg-[#81ecff]/10 border border-[#81ecff]/25"
         label="Total Transmissions"
         value={stats.count}
         footer={
@@ -35,7 +35,7 @@ export function HistoryMetrics({ transactions = [] }: { transactions: Transactio
 
       <MetricCard
         icon="account_balance_wallet"
-        iconColorClass="text-[#69f6b8] bg-[#69f6b8]"
+        iconColorClass="text-[#69f6b8] bg-[#69f6b8]/10 border border-[#69f6b8]/25"
         label="Inbound Volume"
         value={`$${stats.volume > 1000 ? `${(stats.volume / 1000).toFixed(1)}K` : stats.volume.toFixed(2)}`}
         footer={
@@ -48,7 +48,7 @@ export function HistoryMetrics({ transactions = [] }: { transactions: Transactio
 
       <MetricCard
         icon="security"
-        iconColorClass="text-[#af88ff] bg-[#af88ff]"
+        iconColorClass="text-[#af88ff] bg-[#af88ff]/10 border border-[#af88ff]/25"
         label="Verification Status"
         value="High-Trust"
         footer={
