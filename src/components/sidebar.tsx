@@ -108,8 +108,8 @@ export function Sidebar() {
         </div>
       </aside>
 
-      {/* Mobile Top Navigation */}
-      <nav className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#0b0e11]/90 backdrop-blur-3xl border-b border-white/10 px-1 flex items-center justify-around z-50 rounded-b-[2.5rem] shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#0b0e11]/95 backdrop-blur-3xl border-t border-white/10 px-1 flex items-center justify-around z-50 rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
         {navItems.map((item) => (
           <NavLink
             key={item.to}

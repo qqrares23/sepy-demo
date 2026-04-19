@@ -57,7 +57,7 @@ export function SiteShell() {
     <div className="min-h-screen bg-[#0b0e11] text-white">
       <Sidebar />
 
-      <header className="fixed top-0 left-0 right-0 z-50 flex h-20 items-center justify-between border-b border-white/10 bg-[#0b0e11]/80 px-6 backdrop-blur-xl md:pl-[18rem]">
+      <header className="hidden md:flex fixed top-0 left-0 right-0 z-40 h-20 items-center justify-between border-b border-white/10 bg-[#0b0e11]/80 px-6 backdrop-blur-xl md:pl-[18rem]">
         <div className="flex items-center gap-4 flex-1">
           <div ref={searchRef} className="relative w-full max-w-[400px]">
             <div className="hidden md:flex items-center gap-3 rounded-2xl bg-[#161a1e] px-4 py-2 border border-white/5 transition-all focus-within:border-[#81ecff]/30 focus-within:bg-[#1c2024] group w-full">
@@ -125,7 +125,7 @@ export function SiteShell() {
         </div>
       </header>
 
-      <main className="min-h-screen bg-[#0b0e11] md:pl-[18rem] pt-24 pb-32 md:pb-12">
+      <main className="min-h-screen bg-[#0b0e11] md:pl-[18rem] pt-6 md:pt-24 pb-24 md:pb-12">
         <div className="mx-auto max-w-7xl px-6">
           <Outlet />
         </div>
