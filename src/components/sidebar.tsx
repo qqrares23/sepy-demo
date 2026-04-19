@@ -1,7 +1,9 @@
 "use client";
 
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: "grid_view" },
@@ -13,6 +15,46 @@ const navItems = [
 ];
 
 export function Sidebar() {
+  const [walletCount, setWalletCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchWalletCount = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { count, error } = await supabase
+          .from('wallets')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+        
+        if (!error && count !== null) {
+          setWalletCount(count);
+        }
+      }
+    };
+
+    fetchWalletCount();
+
+    // Set up a subscription for real-time updates
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'wallets',
+        },
+        () => {
+          fetchWalletCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
     <>
       {/* Desktop Sidebar */}
@@ -49,16 +91,20 @@ export function Sidebar() {
 
         <div className="mt-auto rounded-3xl bg-slate-950/80 p-5 border border-white/10 group/footer">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#69f6b8] animate-pulse shadow-[0_0_8px_#69f6b8]" />
+            <span className={`w-2 h-2 rounded-full ${walletCount > 0 ? 'bg-[#69f6b8]' : 'bg-slate-600'} animate-pulse shadow-[0_0_8px_${walletCount > 0 ? '#69f6b8' : '#64748b'}]`} />
             <p className="text-[10px] uppercase tracking-[0.35em] text-slate-500">Secure endpoint</p>
           </div>
-          <p className="mt-3 text-sm font-semibold text-[#81ecff] group-hover/footer:translate-x-1 transition-transform">Hardware vault ready</p>
-          <Button
-            variant="secondary"
-            className="mt-5 w-full bg-[#22262b] border border-[#81ecff]/20 text-[#81ecff] hover:bg-[#81ecff] hover:text-[#003840] transition-all duration-300 shadow-lg active:scale-95"
-          >
-            Connect Wallet
-          </Button>
+          <p className="mt-3 text-sm font-semibold text-[#81ecff] group-hover/footer:translate-x-1 transition-transform">
+            {walletCount > 0 ? `${walletCount} Wallet${walletCount > 1 ? 's' : ''} Authorized` : 'Hardware vault ready'}
+          </p>
+          <Link to="/wallets" className="block mt-5">
+            <Button
+              variant="secondary"
+              className="w-full bg-[#22262b] border border-[#81ecff]/20 text-[#81ecff] hover:bg-[#81ecff] hover:text-[#003840] transition-all duration-300 shadow-lg active:scale-95"
+            >
+              {walletCount > 0 ? 'Manage Vaults' : 'Connect Wallet'}
+            </Button>
+          </Link>
         </div>
       </aside>
 

@@ -57,7 +57,7 @@ const ChartContainer = React.forwardRef<
         }
         ref={ref}
         className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-grid-horizontal_line[stroke-dasharray]]:stroke-slate-800 [&_.recharts-cartesian-grid-vertical_line[stroke-dasharray]]:stroke-slate-800 [&_.recharts-curve.recharts-area]:fill-opacity-40 [&_.recharts-dot]:fill-slate-950 [&_.recharts-dot]:stroke-width-2 [&_.recharts-grid-line]:stroke-slate-800 [&_.recharts-layer]:outline-none [&_.recharts-polar-grid-concentric-polygon]:fill-transparent [&_.recharts-polar-grid-concentric-polygon]:stroke-slate-800 [&_.recharts-polar-grid-concentric-circle]:fill-transparent [&_.recharts-polar-grid-concentric-circle]:stroke-slate-800 [&_.recharts-polar-grid-angle_line]:stroke-slate-800 [&_.recharts-sector]:outline-none [&_.recharts-sector]:stroke-slate-950 [&_.recharts-surface]:outline-none",
+          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-grid-horizontal_line[stroke-dasharray]]:stroke-slate-800 [&_.recharts-cartesian-grid-vertical_line[stroke-dasharray]]:stroke-slate-800 [&_.recharts-curve.recharts-area]:fill-opacity-40 [&_.recharts-dot]:fill-slate-950 [&_.recharts-dot]:stroke-width-2 [&_.recharts-grid-line]:stroke-slate-800 [&_.recharts-layer]:outline-none [&_.recharts-polar-grid-concentric-polygon]:fill-transparent [&_.recharts-polar-grid-concentric-polygon]:stroke-slate-800 [&_.recharts-polar-grid-concentric-circle]:fill-transparent [&_.recharts-polar-grid-concentric-circle]:stroke-slate-800 [&_.recharts-polar-grid-angle_line]:stroke-slate-800 [&_.recharts-sector]:outline-none [&_.recharts-sector]:stroke-slate-950 [&_.recharts-surface]:outline-none min-h-0 min-w-0",
           className
         )}
         {...props}
