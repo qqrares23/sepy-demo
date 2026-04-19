@@ -6,7 +6,7 @@ export function Web3Header() {
   const { data: gasPriceResult } = useGasPrice({ watch: true });
 
   const gasPrice = gasPriceResult 
-    ? Math.round(Number(formatUnits(gasPriceResult, 'gwei'))) 
+    ? Math.round(Number(formatUnits(gasPriceResult, 9)))
     : '...';
 
   return (
