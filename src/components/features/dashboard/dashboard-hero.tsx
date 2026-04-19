@@ -1,4 +1,4 @@
-import { TrendingUp, Send, Zap, Plus, ArrowUpRight, Loader2, ShoppingCart, Search } from "lucide-react";
+import { TrendingUp, Send, Zap, Plus, Loader2, ShoppingCart, Search } from "lucide-react";
 import { LiveAreaChart } from "./live-area-chart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
