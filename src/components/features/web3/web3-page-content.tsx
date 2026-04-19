@@ -49,7 +49,7 @@ export function Web3PageContent({
 
         <Web3Header />
 
-        <WalletCard chains={chains} setModal={setModal} connected={false} />
+        <WalletCard chains={chains} setModal={setModal} />
 
         <QuickActions setModal={setModal} />
 

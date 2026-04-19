@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAccount, useConnectorClient } from "wagmi";
+import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
 
 export interface WalletRecord {
@@ -12,7 +12,7 @@ export interface WalletRecord {
 }
 
 export function useWallets() {
-  const { address, isConnected, connector } = useAccount();
+  const { address, connector } = useAccount();
   const [linkedWallets, setLinkedWallets] = useState<WalletRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

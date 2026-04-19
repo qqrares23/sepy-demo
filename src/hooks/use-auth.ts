@@ -75,5 +75,5 @@ export const useAuth = () => {
     await supabase.auth.signOut();
   };
 
-  return { user, loading, signOut, updateProfile };
+  return { user, loading, signOut, updateProfile, updateAccount };
 };

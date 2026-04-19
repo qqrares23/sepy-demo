@@ -46,7 +46,7 @@ export function SiteShell() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  const handleSelectAsset = (asset: CoinGeckoSearchResult) => {
+  const handleSelectAsset = (_asset: CoinGeckoSearchResult) => {
     setSearchQuery("")
     setShowResults(false)
     navigate("/market")
