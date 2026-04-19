@@ -1,7 +1,6 @@
 import type { Token, CoinGeckoSearchResult, HistoryPoint } from "@/types/crypto";
 import type { SwapTx } from "@/types/transaction";
 import type { MarketData } from "@/hooks/use-market-data";
-import { Button } from "@/components/ui/button";
 import { SwapDetailsModal } from "./swap-details-modal";
 import { SwapCard } from "./swap-card";
 import { SwapInfoPanel } from "./swap-info-panel";

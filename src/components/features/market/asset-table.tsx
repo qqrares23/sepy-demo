@@ -24,7 +24,7 @@ interface AssetTableProps {
 export const AssetTable = ({ assets, history, prices, setSelectedAsset, onAddSymbol, searchSymbol }: AssetTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [globalResults, setGlobalResults] = useState<{id: string, name: string, symbol: string}[]>([]);
-  const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
+  const [_isSearchingGlobal, setIsSearchingGlobal] = useState(false);
   const [sortBy, setSortBy] = useState<"rank" | "gainers" | "losers" | "cap" | "price">("rank");
   const [showFilters, setShowFilters] = useState(false);
 

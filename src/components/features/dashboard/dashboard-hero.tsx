@@ -19,7 +19,7 @@ export const DashboardHero = ({ portfolio, history, setActiveModal, topUp, price
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<CoinGeckoSearchResult[]>([]);
   const [selectedCoin, setSelectedCoin] = useState<CoinGeckoSearchResult | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
+  const [_isSearching, setIsSearching] = useState(false);
 
   // Search logic for CoinGecko
   useEffect(() => {

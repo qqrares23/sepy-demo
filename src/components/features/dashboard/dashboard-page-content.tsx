@@ -17,7 +17,7 @@ interface DashboardPageContentProps {
   markets: DashboardMarket[];
   lastAction: string | null;
   triggerTransaction: (amount: number, type: 'buy' | 'send' | 'stake') => void;
-  topUp: (symbol: string, amount: number) => void;
+  topUp: (symbol: string, amount: number) => Promise<void>;
   prices: Record<string, number>;
   sellAsset: (symbol: string, amount: number, bankDetails: BankDetails) => void;
 }

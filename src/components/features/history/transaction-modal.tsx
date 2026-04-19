@@ -1,5 +1,4 @@
 import type { Transaction } from "@/types/transaction";
-import { Button } from "@/components/ui/button";
 
 interface TransactionModalProps {
   tx: Transaction;

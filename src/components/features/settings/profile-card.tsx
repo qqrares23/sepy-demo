@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
-import { Loader2, Check, X, Shield, Mail, User, Lock, UserCircle } from "lucide-react";
+import { Loader2, X, Mail, User, Lock, UserCircle } from "lucide-react";
 
 export function ProfileCard() {
   const { user, updateProfile, updateAccount } = useAuth();

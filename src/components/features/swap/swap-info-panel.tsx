@@ -13,7 +13,7 @@ interface SwapInfoPanelProps {
   payAmount: string;
 }
 
-export function SwapInfoPanel({ payToken, receiveToken, history, prices, data, portfolio, payAmount }: SwapInfoPanelProps) {
+export function SwapInfoPanel({ payToken, receiveToken, history, prices, data, payAmount }: SwapInfoPanelProps) {
   // Find current market data for selected tokens
   const payMarket = useMemo(() => data.find(d => d.symbol.toUpperCase() === payToken.symbol.toUpperCase()), [data, payToken]);
   const receiveMarket = useMemo(() => data.find(d => d.symbol.toUpperCase() === receiveToken.symbol.toUpperCase()), [data, receiveToken]);

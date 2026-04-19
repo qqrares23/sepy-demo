@@ -3,7 +3,7 @@ import { formatUnits } from 'viem';
 
 export function Web3Header() {
   const { data: blockNumber } = useBlockNumber({ watch: true });
-  const { data: gasPriceResult } = useGasPrice({ watch: true });
+  const { data: gasPriceResult } = useGasPrice();
 
   const gasPrice = gasPriceResult 
     ? Math.round(Number(formatUnits(gasPriceResult, 9)))
