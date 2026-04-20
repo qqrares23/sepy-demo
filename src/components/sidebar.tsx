@@ -4,6 +4,7 @@ import { Link, NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/use-auth";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: "grid_view" },
@@ -15,7 +16,26 @@ const navItems = [
 ];
 
 export function Sidebar() {
+  const { user } = useAuth();
   const [walletCount, setWalletCount] = useState<number>(0);
+  const [pendingRequests, setPendingRequests] = useState<number>(0);
+
+  useEffect(() => {
+    if (!user?.is_admin) { setPendingRequests(0); return; }
+    const fetchPending = async () => {
+      const { count } = await supabase
+        .from('topup_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      setPendingRequests(count || 0);
+    };
+    fetchPending();
+    const channel = supabase
+      .channel('admin-topup-requests')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'topup_requests' }, fetchPending)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.is_admin]);
 
   useEffect(() => {
     const fetchWalletCount = async () => {
@@ -87,6 +107,28 @@ export function Sidebar() {
               {item.label}
             </NavLink>
           ))}
+          {user?.is_admin && (
+            <NavLink
+              to="/admin"
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-2xl px-5 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 transform active:scale-95 group ${
+                  isActive
+                    ? "bg-[#1a1d21] text-[#81ecff] border-r-4 border-[#81ecff] shadow-[0_0_20px_rgba(129,236,255,0.1)]"
+                    : "text-slate-500 hover:text-[#81ecff] hover:bg-white/5 hover:translate-x-1"
+                }`
+              }
+            >
+              <span className="material-symbols-outlined transition-transform duration-300 group-hover:scale-110">
+                admin_panel_settings
+              </span>
+              Admin
+              {pendingRequests > 0 && (
+                <span className="ml-auto flex h-4 w-4 items-center justify-center rounded-full bg-[#ff716c] text-[8px] font-black text-white">
+                  {pendingRequests}
+                </span>
+              )}
+            </NavLink>
+          )}
         </nav>
 
         <div className="mt-auto rounded-3xl bg-slate-950/80 p-5 border border-white/10 group/footer">
@@ -127,6 +169,24 @@ export function Sidebar() {
             <span className="text-[6px] font-black uppercase tracking-widest">{item.label}</span>
           </NavLink>
         ))}
+        {user?.is_admin && (
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              `relative flex flex-col items-center justify-center gap-1 px-1 py-2 rounded-2xl transition-all duration-300 shrink-0 min-w-[50px] ${
+                isActive ? "text-[#81ecff] bg-[#81ecff]/10" : "text-slate-500"
+              }`
+            }
+          >
+            <span className="material-symbols-outlined text-xl">admin_panel_settings</span>
+            <span className="text-[6px] font-black uppercase tracking-widest">Admin</span>
+            {pendingRequests > 0 && (
+              <span className="absolute top-1 right-1 h-3 w-3 flex items-center justify-center rounded-full bg-[#ff716c] text-[7px] font-black text-white">
+                {pendingRequests}
+              </span>
+            )}
+          </NavLink>
+        )}
         <Link
           to="/login"
           className="flex flex-col items-center justify-center gap-1 px-1 py-2 rounded-2xl transition-all duration-300 shrink-0 min-w-[50px] text-slate-500 hover:text-[#ff716c]"

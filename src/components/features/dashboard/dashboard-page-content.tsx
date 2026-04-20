@@ -48,10 +48,11 @@ export function DashboardPageContent({
 
       <DashboardHeader activeRange={activeRange} setActiveRange={setActiveRange} />
 
-      <DashboardHero 
-        portfolio={portfolio} 
-        history={history} 
-        setActiveModal={setActiveModal} 
+      <DashboardHero
+        portfolio={portfolio}
+        history={history}
+        activeRange={activeRange}
+        setActiveModal={setActiveModal}
         topUp={topUp}
         prices={prices}
       />

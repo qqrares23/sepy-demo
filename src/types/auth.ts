@@ -5,6 +5,7 @@ export interface UserProfile {
   avatar_url?: string;
   public_id?: string;
   tier?: 'standard' | 'pro' | 'institutional';
+  is_admin?: boolean;
   created_at: string;
 }
 

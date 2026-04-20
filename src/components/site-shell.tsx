@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/sidebar"
 import { useState, useEffect, useRef } from "react"
 import { Search, Loader2, X } from "lucide-react"
 import type { CoinGeckoSearchResult } from "@/types/crypto"
+import { NotificationBell } from "@/components/features/notifications/notification-bell"
 
 export function SiteShell() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -113,6 +114,7 @@ export function SiteShell() {
         </div>
 
         <div className="flex items-center gap-3">
+          <NotificationBell />
           <Link to="/wallets" className="inline-flex h-11 w-11 items-center justify-center rounded-3xl bg-slate-950/80 text-slate-400 hover:text-cyan-300 transition-colors">
             <span className="material-symbols-outlined">account_balance_wallet</span>
           </Link>

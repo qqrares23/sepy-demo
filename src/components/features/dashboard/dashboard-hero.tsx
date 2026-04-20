@@ -2,24 +2,44 @@ import { TrendingUp, Send, Zap, Plus, Loader2, ShoppingCart, Search } from "luci
 import { LiveAreaChart } from "./live-area-chart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { HistoryPoint, CoinGeckoSearchResult } from "@/types/crypto";
+import { useChartData } from "@/hooks/use-chart-data";
 
 interface DashboardHeroProps {
   portfolio: number;
   history: HistoryPoint[];
+  activeRange: string;
   setActiveModal: (modal: 'send' | 'stake' | 'sell' | null) => void;
   topUp?: (symbol: string, amount: number) => Promise<void>;
   prices?: Record<string, number>;
 }
 
-export const DashboardHero = ({ portfolio, history, setActiveModal, topUp, prices }: DashboardHeroProps) => {
+export const DashboardHero = ({ portfolio, history, activeRange, setActiveModal, topUp, prices }: DashboardHeroProps) => {
   const [isBuying, setIsBuying] = useState(false);
   const [buyAmount, setBuyAmount] = useState("0.1");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<CoinGeckoSearchResult[]>([]);
   const [selectedCoin, setSelectedCoin] = useState<CoinGeckoSearchResult | null>(null);
   const [_isSearching, setIsSearching] = useState(false);
+
+  const { data: btcHistory, loading: chartLoading } = useChartData("bitcoin", activeRange);
+
+  // Scale BTC trajectory to current portfolio value for a realistic chart
+  const chartData = useMemo<HistoryPoint[]>(() => {
+    if (!btcHistory.length) return history;
+    if (!portfolio) return btcHistory.map(p => ({ ...p, value: 0 }));
+    const lastBtc = btcHistory[btcHistory.length - 1].value;
+    const scale = portfolio / lastBtc;
+    return btcHistory.map(p => ({ ...p, value: p.value * scale }));
+  }, [btcHistory, portfolio, history]);
+
+  // Range % change derived from actual chart data
+  const rangeChange = useMemo(() => {
+    if (chartData.length < 2) return null;
+    const pct = ((chartData[chartData.length - 1].value - chartData[0].value) / chartData[0].value) * 100;
+    return { pct, isUp: pct >= 0 };
+  }, [chartData]);
 
   // Search logic for CoinGecko
   useEffect(() => {
@@ -71,10 +91,11 @@ export const DashboardHero = ({ portfolio, history, setActiveModal, topUp, price
               {portfolio ? `$${portfolio.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "$0.00"}
             </div>
             <div className="flex items-center gap-2 mt-6">
-              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#69f6b8]/10 text-[#69f6b8] text-sm font-bold">
-                <TrendingUp className="h-4 w-4" /> {portfolio > 0 ? "+2.4%" : "0.0%"}
+              <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold ${rangeChange?.isUp ?? true ? 'bg-[#69f6b8]/10 text-[#69f6b8]' : 'bg-[#ff716c]/10 text-[#ff716c]'}`}>
+                <TrendingUp className="h-4 w-4" />
+                {rangeChange ? `${rangeChange.isUp ? '+' : ''}${rangeChange.pct.toFixed(2)}%` : (portfolio > 0 ? "+0.00%" : "0.0%")}
               </div>
-              <span className="text-xs text-[#a9abaf] font-medium ml-2 uppercase tracking-widest italic">Supabase Cloud Sync</span>
+              <span className="text-xs text-[#a9abaf] font-medium ml-2 uppercase tracking-widest italic">{activeRange} Performance</span>
             </div>
           </div>
 
@@ -152,7 +173,13 @@ export const DashboardHero = ({ portfolio, history, setActiveModal, topUp, price
         </div>
         
         <div className="relative h-48 md:h-56 mt-8 w-full group">
-           <LiveAreaChart data={history} color="#81ecff" />
+          {chartLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="h-6 w-6 text-[#81ecff] animate-spin" />
+            </div>
+          ) : (
+           <LiveAreaChart data={chartData} color={rangeChange?.isUp ?? true ? "#81ecff" : "#ff716c"} />
+          )}
            <div className="absolute top-0 right-0 z-20">
               <div className="bg-[#1c2024]/80 backdrop-blur-md border border-white/5 rounded-lg px-3 py-1.5 flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#69f6b8] animate-pulse" />

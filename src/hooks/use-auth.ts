@@ -20,6 +20,7 @@ export const useAuth = () => {
         full_name: data.full_name,
         avatar_url: data.avatar_url,
         tier: data.tier,
+        is_admin: data.is_admin ?? false,
         created_at: createdAt,
       });
     } else {

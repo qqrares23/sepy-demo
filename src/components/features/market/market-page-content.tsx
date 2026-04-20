@@ -50,7 +50,7 @@ export function MarketPageContent({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className={`${viewMode === "snapshot" ? "lg:col-span-8" : "lg:col-span-12"} space-y-8 transition-all duration-500`}>
-          <MarketChartSection prices={prices} history={history} />
+          <MarketChartSection prices={prices} />
           <AssetTable 
             assets={assets} 
             history={history} 

@@ -126,22 +126,36 @@ export function useMarketData(
     if (!ALCHEMY_API_KEY || ALCHEMY_API_KEY === "YOUR_ALCHEMY_API_KEY") {
       throw new Error("Alchemy API Key missing");
     }
-    const symbols = customSymbols.join(",");
-    const response = await fetch(`https://api.g.alchemy.com/prices/v1/${ALCHEMY_API_KEY}/tokens/by-symbol?symbols=${symbols}`);
-    if (!response.ok) throw new Error(`Alchemy Error (${response.status})`);
+    // Alchemy requires repeated params: ?symbols=BTC&symbols=ETH (not comma-separated)
+    const params = customSymbols.map(s => `symbols=${encodeURIComponent(s)}`).join("&");
+    const response = await fetch(
+      `https://api.g.alchemy.com/prices/v1/${ALCHEMY_API_KEY}/tokens/by-symbol?${params}`
+    );
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      throw new Error(`Alchemy Error (${response.status})${body ? `: ${body.slice(0, 120)}` : ""}`);
+    }
     const result = await response.json();
-    return customSymbols.map(s => {
-      const entry = result.data?.find((d: any) => d.symbol === s);
-      return {
-        id: s.toLowerCase(),
-        symbol: s.toLowerCase(),
-        name: s,
-        current_price: entry?.prices?.[0]?.value ? parseFloat(entry.prices[0].value) : 0,
-        market_cap: 0,
-        price_change_percentage_24h: 0,
-        image: ""
-      };
-    });
+    return customSymbols
+      .map(s => {
+        const entry = result.data?.find((d: any) => d.symbol === s);
+        // Skip symbols Alchemy doesn't support (they return an error field)
+        if (!entry || entry.error || !entry.prices?.length) return null;
+        // Find USD price specifically; fall back to first available
+        const usdPrice = entry.prices.find((p: any) => p.currency === "usd") ?? entry.prices[0];
+        const price = usdPrice?.value ? parseFloat(usdPrice.value) : 0;
+        if (price === 0) return null;
+        return {
+          id: s.toLowerCase(),
+          symbol: s.toLowerCase(),
+          name: s,
+          current_price: price,
+          market_cap: 0,
+          price_change_percentage_24h: 0,
+          image: ""
+        };
+      })
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
   }, [customSymbols]);
 
   const fetchMarkets = useCallback(async () => {
@@ -227,33 +241,25 @@ export function useMarketData(
   const topUp = async (symbol: string, amount: number) => {
     if (!user) { setLastAction("Please log in"); return; }
     const upperSymbol = symbol.toUpperCase();
-    setLastAction(`Initiating ${upperSymbol} Purchase...`);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    const newAmount = (holdings[upperSymbol] || 0) + amount;
-    const { error } = await supabase.from('holdings').upsert({ user_id: user.id, symbol: upperSymbol, amount: newAmount }, { onConflict: 'user_id, symbol' });
-    
-    if (!error) {
-      // Record transaction
-      const usdValue = amount * (prices[upperSymbol] || 0);
-      await supabase.from('transactions').insert({
-        user_id: user.id,
-        type: 'Buy',
-        asset: upperSymbol === 'BTC' ? 'Bitcoin' : upperSymbol === 'ETH' ? 'Ethereum' : upperSymbol,
-        symbol: upperSymbol,
-        amount: `+${amount} ${upperSymbol}`,
-        value: `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-        usd_value: usdValue,
-        status: 'Completed',
-        from: 'External Card',
-        to: 'Vault Wallet'
-      });
+    setLastAction(`Submitting purchase request for ${upperSymbol}...`);
 
-      setHoldings(prev => ({ ...prev, [upperSymbol]: newAmount }));
-      setLastAction(`Transaction Confirmed: +${amount} ${upperSymbol}`);
+    const usdValue = amount * (prices[upperSymbol] || 0);
+    const { error } = await supabase.from('topup_requests').insert({
+      user_id: user.id,
+      user_email: user.email,
+      user_name: user.full_name || null,
+      symbol: upperSymbol,
+      amount,
+      usd_value: usdValue,
+      status: 'pending',
+    });
+
+    if (!error) {
+      setLastAction(`Request submitted: +${amount} ${upperSymbol} — awaiting admin approval`);
     } else {
-      setLastAction("Transaction Failed");
+      setLastAction("Request failed. Please try again.");
     }
-    setTimeout(() => setLastAction(null), 4000);
+    setTimeout(() => setLastAction(null), 5000);
   };
 
   const swapAssets = async (fromSymbol: string, toSymbol: string, fromAmount: number, toAmount: number) => {
