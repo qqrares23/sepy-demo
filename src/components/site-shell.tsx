@@ -1,12 +1,19 @@
-import { Link, Outlet, useNavigate } from "react-router-dom"
+import { Link, Outlet, useNavigate, Navigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Sidebar } from "@/components/sidebar"
 import { useState, useEffect, useRef } from "react"
 import { Search, Loader2, X } from "lucide-react"
 import type { CoinGeckoSearchResult } from "@/types/crypto"
 import { NotificationBell } from "@/components/features/notifications/notification-bell"
+import { useAuth } from "@/hooks/use-auth"
 
 export function SiteShell() {
+  const { user, loading } = useAuth()
+
+  // Second-layer guard — ProtectedRoute in the router is the first layer.
+  // This catches any race-through while Supabase resolves the session.
+  if (!loading && !user) return <Navigate to="/login" replace />
+
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<CoinGeckoSearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)

@@ -8,8 +8,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import "./index.css"
 import { ThemeProvider } from "@/components/theme-provider.tsx"
 import { SiteShell } from "@/components/site-shell.tsx"
+import { ProtectedRoute, PublicOnlyRoute } from "@/components/protected-route.tsx"
 import { config } from '@/lib/wagmi'
-import { useAuth } from "@/hooks/use-auth.ts"
 import DashboardPage from "@/pages/dashboard-page.tsx"
 import LoginPage from "@/pages/login-page.tsx"
 import RegisterPage from "@/pages/register-page.tsx"
@@ -23,25 +23,6 @@ import AdminPage from "@/pages/admin-page.tsx"
 
 const queryClient = new QueryClient()
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0b0e11] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-2 border-[#81ecff]/30 border-t-[#81ecff] rounded-full animate-spin" />
-          <p className="text-[10px] font-bold tracking-[0.3em] text-[#a9abaf] uppercase">Verifying session…</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) return <Navigate to="/login" replace />
-
-  return <>{children}</>
-}
-
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <WagmiProvider config={config}>
@@ -54,18 +35,22 @@ createRoot(document.getElementById("root")!).render(
           <ThemeProvider defaultTheme="dark">
             <BrowserRouter>
               <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
+                {/* Public only — redirect to dashboard if already logged in */}
+                <Route path="/login"    element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
+                <Route path="/register" element={<PublicOnlyRoute><RegisterPage /></PublicOnlyRoute>} />
+
+                {/* Protected — redirect to /login if not authenticated */}
                 <Route path="/" element={<ProtectedRoute><SiteShell /></ProtectedRoute>}>
-                  <Route index element={<DashboardPage />} />
-                  <Route path="market" element={<MarketPage />} />
-                  <Route path="swap" element={<SwaptradePage />} />
+                  <Route index          element={<DashboardPage />} />
+                  <Route path="market"  element={<MarketPage />} />
+                  <Route path="swap"    element={<SwaptradePage />} />
                   <Route path="settings" element={<VaultSettings />} />
-                  <Route path="web3" element={<Web3Page />} />
+                  <Route path="web3"    element={<Web3Page />} />
                   <Route path="wallets" element={<WalletPage />} />
                   <Route path="history" element={<TransactionHistoryPage />} />
-                  <Route path="admin" element={<AdminPage />} />
+                  <Route path="admin"   element={<AdminPage />} />
                 </Route>
+
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </BrowserRouter>
