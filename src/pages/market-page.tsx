@@ -5,15 +5,24 @@ import type { Asset } from "@/types/crypto";
 import { useMarketData, type PriceProvider } from "@/hooks/use-market-data";
 import { MarketPageContent } from "@/components/features/market/market-page-content";
 import { RefreshCw, Database } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function MarketPage() {
   const [currency, setCurrency] = useState<'usd' | 'eur'>('usd');
   const [provider, setProvider] = useState<PriceProvider>('coingecko');
   const [watchedSymbols, setWatchedSymbols] = useState<string[]>(["BTC", "ETH", "SOL", "USDC", "BNB", "XRP", "ADA", "AVAX", "DOGE", "DOT"]);
   
-  const { data, prices, history, loading, refresh, error, searchSymbol, topUp } = useMarketData(currency, provider, watchedSymbols);
+  const { data, prices, history, loading, refresh, error, searchSymbol, topUp, lastAction } = useMarketData(currency, provider, watchedSymbols);
   const [viewMode, setViewMode] = useState<"real-time" | "snapshot">("real-time");
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const navigate = useNavigate();
+
+  const handleTrade = async (symbol: string, amount: number) => {
+    const success = await topUp(symbol, amount);
+    if (success) {
+      navigate("/");
+    }
+  };
 
   const handleAddSymbol = async (symbol: string) => {
     const upperSymbol = symbol.toUpperCase();
@@ -118,7 +127,8 @@ export default function MarketPage() {
         assets={assets}
         onAddSymbol={handleAddSymbol}
         searchSymbol={searchSymbol}
-        onTrade={topUp}
+        onTrade={handleTrade}
+        lastAction={lastAction}
       />
     </div>
   );

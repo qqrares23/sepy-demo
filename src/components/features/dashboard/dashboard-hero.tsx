@@ -13,15 +13,16 @@ interface DashboardHeroProps {
   setActiveModal: (modal: 'send' | 'stake' | 'sell' | null) => void;
   topUp?: (symbol: string, amount: number) => Promise<void>;
   prices?: Record<string, number>;
+  onAddSymbol?: (symbol: string, id?: string) => void;
 }
 
-export const DashboardHero = ({ portfolio, history, activeRange, setActiveModal, topUp, prices }: DashboardHeroProps) => {
+export const DashboardHero = ({ portfolio, history, activeRange, setActiveModal, topUp, prices, onAddSymbol }: DashboardHeroProps) => {
   const [isBuying, setIsBuying] = useState(false);
   const [buyAmount, setBuyAmount] = useState("0.1");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<CoinGeckoSearchResult[]>([]);
   const [selectedCoin, setSelectedCoin] = useState<CoinGeckoSearchResult | null>(null);
-  const [_isSearching, setIsSearching] = useState(false);
+  const [, setIsSearching] = useState(false);
 
   const { data: btcHistory, loading: chartLoading } = useChartData("bitcoin", activeRange);
 
@@ -66,6 +67,9 @@ export const DashboardHero = ({ portfolio, history, activeRange, setActiveModal,
 
   const handleFinalBuy = async () => {
     if (!selectedCoin || !buyAmount || isNaN(parseFloat(buyAmount))) return;
+    
+    // Ensure the symbol is added to the fetch list before buying
+    onAddSymbol?.(selectedCoin.symbol, selectedCoin.id);
     
     setIsBuying(true);
     try {
@@ -124,7 +128,10 @@ export const DashboardHero = ({ portfolio, history, activeRange, setActiveModal,
                     {searchResults.map(coin => (
                       <button 
                         key={coin.id}
-                        onClick={() => setSelectedCoin(coin)}
+                        onClick={() => {
+                          setSelectedCoin(coin);
+                          onAddSymbol?.(coin.symbol, coin.id);
+                        }}
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left border-b border-white/5 last:border-0"
                       >
                         <img src={coin.thumb} alt="" className="w-5 h-5 rounded-full" />

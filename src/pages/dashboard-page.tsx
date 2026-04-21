@@ -1,11 +1,16 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useMarketData } from "@/hooks/use-market-data";
 import { useDashboardState } from "@/hooks/use-dashboard-state";
 import { DashboardPageContent } from "@/components/features/dashboard/dashboard-page-content";
-import type { DashboardMarket } from "@/types/crypto";
+import type { DashboardMarket, BankDetails } from "@/types/crypto";
+import { useNavigate } from "react-router-dom";
+
+const DEFAULT_SYMBOLS = ["BTC", "ETH", "SOL", "USDC", "BNB", "XRP", "ADA", "AVAX", "DOGE", "DOT"];
 
 export default function DashboardPage() {
-  const { data, prices, portfolio, holdings, history, triggerTransaction, topUp, sellAsset, lastAction } = useMarketData();
+  const [watchedSymbols, setWatchedSymbols] = useState<string[]>(DEFAULT_SYMBOLS);
+  const { data, prices, portfolio, holdings, history, triggerTransaction, topUp, sellAsset, lastAction, addDynamicMapping } = useMarketData('usd', 'coingecko', watchedSymbols);
+  const navigate = useNavigate();
   const {
     activeRange,
     setActiveRange,
@@ -14,6 +19,30 @@ export default function DashboardPage() {
     selectedAsset,
     setSelectedAsset,
   } = useDashboardState();
+
+  const handleAddSymbol = (symbol: string, id?: string) => {
+    const upperSymbol = symbol.toUpperCase();
+    if (id) {
+      addDynamicMapping(symbol, id);
+    }
+    if (!watchedSymbols.includes(upperSymbol)) {
+      setWatchedSymbols(prev => [...prev, upperSymbol]);
+    }
+  };
+
+  const handleSell = async (symbol: string, amount: number, bankDetails: BankDetails) => {
+    const success = await sellAsset(symbol, amount, bankDetails);
+    if (success) {
+      navigate("/");
+    }
+  };
+
+  const handleTopUp = async (symbol: string, amount: number) => {
+    const success = await topUp(symbol, amount);
+    if (success) {
+      navigate("/");
+    }
+  };
 
   const myAssets = useMemo(() => {
     // Map holdings to the format needed for the table
@@ -54,9 +83,10 @@ export default function DashboardPage() {
       markets={myAssets}
       lastAction={lastAction}
       triggerTransaction={triggerTransaction}
-      topUp={topUp}
+      topUp={handleTopUp}
       prices={prices}
-      sellAsset={sellAsset}
+      sellAsset={handleSell}
+      onAddSymbol={handleAddSymbol}
     />
   );
 }

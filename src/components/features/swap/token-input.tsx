@@ -10,7 +10,8 @@ export function TokenInput({
   onAmountChange, 
   onTokenSelect,
   isReadOnly = false,
-  tokenList
+  tokenList,
+  onAddSymbol
 }: { 
   label: string; 
   token: Token; 
@@ -19,6 +20,7 @@ export function TokenInput({
   onTokenSelect?: (token: CoinGeckoSearchResult) => void;
   isReadOnly?: boolean;
   tokenList?: CoinGeckoSearchResult[];
+  onAddSymbol?: (symbol: string, id?: string) => void;
 }) {
   const [showSearch, setShowSearch] = useState(false);
   const [query, setQuery] = useState("");
@@ -114,6 +116,7 @@ export function TokenInput({
                   key={coin.id}
                   onClick={() => {
                     onTokenSelect?.(coin);
+                    onAddSymbol?.(coin.symbol, coin.id);
                     setShowSearch(false);
                     setQuery("");
                   }}

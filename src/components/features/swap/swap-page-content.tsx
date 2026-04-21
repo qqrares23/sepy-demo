@@ -5,6 +5,7 @@ import { SwapDetailsModal } from "./swap-details-modal";
 import { SwapCard } from "./swap-card";
 import { SwapInfoPanel } from "./swap-info-panel";
 import { RecentSwapsTable } from "./recent-swaps-table";
+import { DashboardNotification } from "../dashboard/dashboard-notification";
 
 interface SwapPageContentProps {
   prices: Record<string, number>;
@@ -25,6 +26,8 @@ interface SwapPageContentProps {
   onReceiveTokenSelect?: (coin: CoinGeckoSearchResult) => void;
   onInitiateSwap?: () => Promise<void>;
   ownedAssets?: CoinGeckoSearchResult[];
+  lastAction: string | null;
+  onAddSymbol?: (symbol: string, id?: string) => void;
 }
 
 export function SwapPageContent({
@@ -46,6 +49,8 @@ export function SwapPageContent({
   onReceiveTokenSelect,
   onInitiateSwap,
   ownedAssets,
+  lastAction,
+  onAddSymbol,
 }: SwapPageContentProps) {
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
@@ -55,6 +60,8 @@ export function SwapPageContent({
         .font-headline { font-family: 'Space Grotesk', sans-serif; }
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
       `}</style>
+
+      <DashboardNotification lastAction={lastAction} />
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -81,6 +88,7 @@ export function SwapPageContent({
           onReceiveTokenSelect={onReceiveTokenSelect}
           onInitiateSwap={onInitiateSwap}
           ownedAssets={ownedAssets}
+          onAddSymbol={onAddSymbol}
         />
 
         <SwapInfoPanel 

@@ -20,6 +20,7 @@ interface DashboardPageContentProps {
   topUp: (symbol: string, amount: number) => Promise<void>;
   prices: Record<string, number>;
   sellAsset: (symbol: string, amount: number, bankDetails: BankDetails) => void;
+  onAddSymbol?: (symbol: string, id?: string) => void;
 }
 
 export function DashboardPageContent({
@@ -37,6 +38,7 @@ export function DashboardPageContent({
   topUp,
   prices,
   sellAsset,
+  onAddSymbol,
 }: DashboardPageContentProps) {
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20 relative">
@@ -55,6 +57,7 @@ export function DashboardPageContent({
         setActiveModal={setActiveModal}
         topUp={topUp}
         prices={prices}
+        onAddSymbol={onAddSymbol}
       />
 
       <MarketIntelligence 

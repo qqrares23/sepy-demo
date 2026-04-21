@@ -99,7 +99,37 @@ export function useMarketData(
   const [error, setError] = useState<string | null>(null);
   const [holdings, setHoldings] = useState<Record<string, number>>({});
   const [history, setHistory] = useState<HistoryPoint[]>([]);
-  const [lastAction, setLastAction] = useState<string | null>(null);
+  const [dynamicMappings, setDynamicMappings] = useState<Record<string, string>>({});
+  const [lastAction, setLastAction] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem("last_action");
+      if (saved) {
+        sessionStorage.removeItem("last_action");
+        return saved;
+      }
+    }
+    return null;
+  });
+
+  const updateLastAction = useCallback((msg: string | null, persist = false) => {
+    setLastAction(msg);
+    if (msg && persist && typeof window !== 'undefined') {
+      sessionStorage.setItem("last_action", msg);
+    }
+    if (!msg && typeof window !== 'undefined') {
+      sessionStorage.removeItem("last_action");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (lastAction) {
+      const timer = setTimeout(() => {
+        setLastAction(null);
+        if (typeof window !== 'undefined') sessionStorage.removeItem("last_action");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastAction]);
   
   const isFetching = useRef(false);
 
@@ -129,7 +159,10 @@ export function useMarketData(
     const validSymbols = symbols.filter(s => s && s.trim());
     if (validSymbols.length === 0) return [];
 
-    const ids = validSymbols.map(s => SYMBOL_TO_ID[s.toUpperCase()] || s.toLowerCase()).join(",");
+    const ids = validSymbols.map(s => {
+      const upperS = s.toUpperCase();
+      return dynamicMappings[upperS] || SYMBOL_TO_ID[upperS] || s.toLowerCase();
+    }).join(",");
     const params = new URLSearchParams({
       vs_currency: currency,
       ids: ids,
@@ -150,7 +183,7 @@ export function useMarketData(
     if (response.status === 429) throw new Error("CoinGecko Rate Limit.");
     if (!response.ok) throw new Error("CoinGecko API Error");
     return await response.json();
-  }, [currency]);
+  }, [currency, dynamicMappings]);
 
   const fetchFromAlchemy = useCallback(async () => {
     if (!ALCHEMY_API_KEY || ALCHEMY_API_KEY === "YOUR_ALCHEMY_API_KEY") {
@@ -210,6 +243,10 @@ export function useMarketData(
     }
   }, [symbolsKey, provider, fetchFromAlchemy, fetchFromCoinGeckoInternal]);
 
+  const addDynamicMapping = useCallback((symbol: string, id: string) => {
+    setDynamicMappings(prev => ({ ...prev, [symbol.toUpperCase()]: id }));
+  }, []);
+
   const searchSymbol = async (query: string): Promise<string | null> => {
     try {
       const baseUrl = COINGECKO_API_KEY ? "https://pro-api.coingecko.com/api/v3" : "https://api.coingecko.com/api/v3";
@@ -219,6 +256,34 @@ export function useMarketData(
       if (!response.ok) return null;
       const result = await response.json();
       const coin = result.coins?.find((c: { symbol: string; id: string }) => c.symbol.toUpperCase() === query.toUpperCase()) || result.coins?.[0];
+      
+      if (coin) {
+        addDynamicMapping(coin.symbol, coin.id);
+        
+        // Fetch price immediately so UI doesn't show $0
+        const priceResp = await fetch(`${baseUrl}/simple/price?ids=${coin.id}&vs_currencies=${currency}`, { headers });
+        if (priceResp.ok) {
+          const priceData = await priceResp.json();
+          const currentPrice = priceData[coin.id]?.[currency];
+          
+          if (currentPrice) {
+            setData(prev => {
+              const exists = prev.find(p => p.id === coin.id);
+              if (exists) return prev;
+              return [...prev, {
+                id: coin.id,
+                symbol: coin.symbol.toLowerCase(),
+                name: coin.name,
+                current_price: currentPrice,
+                market_cap: 0,
+                price_change_percentage_24h: 0,
+                image: coin.thumb
+              }];
+            });
+          }
+        }
+      }
+      
       return coin?.id || null;
     } catch (err) {
       return null;
@@ -264,14 +329,13 @@ export function useMarketData(
   // 4. Actions
   const triggerTransaction = (amount: number, type: 'buy' | 'send' | 'stake') => {
     const sym = currency === 'usd' ? '$' : '€';
-    setLastAction(`${type.toUpperCase()} successful for ${sym}${amount}`);
-    setTimeout(() => setLastAction(null), 4000);
+    updateLastAction(`${type.toUpperCase()} successful for ${sym}${amount}`, true);
   };
 
   const topUp = async (symbol: string, amount: number) => {
-    if (!user) { setLastAction("Please log in"); return; }
+    if (!user) { updateLastAction("Please log in"); return false; }
     const upperSymbol = symbol.toUpperCase();
-    setLastAction(`Submitting purchase request for ${upperSymbol}...`);
+    updateLastAction(`Submitting purchase request for ${upperSymbol}...`);
 
     const usdValue = amount * (prices[upperSymbol] || 0);
     const { error } = await supabase.from('topup_requests').insert({
@@ -285,24 +349,24 @@ export function useMarketData(
     });
 
     if (!error) {
-      setLastAction(`Request submitted: +${amount} ${upperSymbol} — awaiting admin approval`);
+      updateLastAction(`Request submitted: +${amount} ${upperSymbol} — awaiting admin approval`, true);
+      return true;
     } else {
-      setLastAction("Request failed. Please try again.");
+      updateLastAction("Request failed. Please try again.");
+      return false;
     }
-    setTimeout(() => setLastAction(null), 5000);
   };
 
   const swapAssets = async (fromSymbol: string, toSymbol: string, fromAmount: number, toAmount: number) => {
-    if (!user) { setLastAction("Please log in"); return; }
+    if (!user) { updateLastAction("Please log in"); return false; }
     const upperFrom = fromSymbol.toUpperCase();
     const upperTo = toSymbol.toUpperCase();
-    setLastAction(`Submitting swap request: ${upperFrom} to ${upperTo}...`);
+    updateLastAction(`Submitting swap request: ${upperFrom} to ${upperTo}...`);
 
     const currentFromAmount = holdings[upperFrom] || 0;
     if (currentFromAmount < fromAmount) {
-      setLastAction("Insufficient balance");
-      setTimeout(() => setLastAction(null), 4000);
-      return;
+      updateLastAction("Insufficient balance");
+      return false;
     }
 
     const usdValue = fromAmount * (prices[upperFrom] || 0);
@@ -320,24 +384,24 @@ export function useMarketData(
     });
 
     if (!error) {
-      setLastAction(`Swap request submitted — awaiting admin approval`);
+      updateLastAction(`Swap request submitted — awaiting admin approval`, true);
+      return true;
     } else {
       console.error("Swap request error:", error);
-      setLastAction("Swap request failed. Please try again.");
+      updateLastAction("Swap request failed. Please try again.");
+      return false;
     }
-    setTimeout(() => setLastAction(null), 5000);
   };
 
   const sellAsset = async (symbol: string, amount: number, bankDetails: BankDetails) => {
-    if (!user) { setLastAction("Please log in"); return; }
+    if (!user) { updateLastAction("Please log in"); return false; }
     const upperSymbol = symbol.toUpperCase();
-    setLastAction(`Submitting sell request for ${upperSymbol}...`);
+    updateLastAction(`Submitting sell request for ${upperSymbol}...`);
     
     const currentAmount = holdings[upperSymbol] || 0;
     if (currentAmount < amount) {
-      setLastAction("Insufficient balance to sell");
-      setTimeout(() => setLastAction(null), 4000);
-      return;
+      updateLastAction("Insufficient balance to sell");
+      return false;
     }
 
     const usdValue = amount * (prices[upperSymbol] || 0);
@@ -357,17 +421,19 @@ export function useMarketData(
     });
 
     if (!error) {
-      setLastAction(`Sell request submitted — awaiting admin approval`);
+      updateLastAction(`Sell request submitted — awaiting admin approval`, true);
+      return true;
     } else {
       console.error("Sell request error:", error);
-      setLastAction("Sell request failed. Please try again.");
+      updateLastAction("Sell request failed. Please try again.");
+      return false;
     }
-    setTimeout(() => setLastAction(null), 5000);
   };
 
   return { 
     data, prices, portfolio, holdings, history, 
     triggerTransaction, topUp, swapAssets, sellAsset,
-    lastAction, loading, error, refresh: fetchMarkets, searchSymbol
+    lastAction, loading, error, refresh: fetchMarkets, searchSymbol,
+    addDynamicMapping
   };
 }

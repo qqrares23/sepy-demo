@@ -7,9 +7,24 @@ import { useMarketData } from "@/hooks/use-market-data";
 import { useSwapState } from "@/hooks/use-swap-state";
 import { SwapPageContent } from "@/components/features/swap/swap-page-content";
 import { supabase } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
+
+const DEFAULT_SYMBOLS = ["BTC", "ETH", "SOL", "USDC", "BNB", "XRP", "ADA", "AVAX", "DOGE", "DOT"];
 
 export default function SwapPage() {
-  const { data, prices, portfolio, history, holdings, swapAssets } = useMarketData();
+  const [watchedSymbols, setWatchedSymbols] = useState<string[]>(DEFAULT_SYMBOLS);
+  const { data, prices, portfolio, history, holdings, swapAssets, lastAction, addDynamicMapping } = useMarketData('usd', 'coingecko', watchedSymbols);
+  const navigate = useNavigate();
+
+  const handleAddSymbol = (symbol: string, id?: string) => {
+    const upperSymbol = symbol.toUpperCase();
+    if (id) {
+      addDynamicMapping(symbol, id);
+    }
+    if (!watchedSymbols.includes(upperSymbol)) {
+      setWatchedSymbols(prev => [...prev, upperSymbol]);
+    }
+  };
   const {
     payAmount,
     setPayAmount,
@@ -120,7 +135,10 @@ export default function SwapPage() {
     const amountToReceive = parseFloat(receiveAmount);
     if (isNaN(amountToPay) || isNaN(amountToReceive)) return;
 
-    await swapAssets(activePayToken.symbol, activeReceiveToken.symbol, amountToPay, amountToReceive);
+    const success = await swapAssets(activePayToken.symbol, activeReceiveToken.symbol, amountToPay, amountToReceive);
+    if (success) {
+      navigate("/");
+    }
   };
 
   // Filter market data to only include coins user actually owns
@@ -154,6 +172,8 @@ export default function SwapPage() {
       onReceiveTokenSelect={handleReceiveTokenSelect}
       onInitiateSwap={onInitiateSwap}
       ownedAssets={ownedAssets}
+      lastAction={lastAction}
+      onAddSymbol={handleAddSymbol}
     />
   );
 }

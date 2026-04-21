@@ -20,48 +20,39 @@ Extends `auth.users` via triggers. Stores metadata.
 - `full_name`: text
 - `avatar_url`: text
 - `tier`: text (standard, pro, institutional)
+- `is_admin`: boolean (controls access to Admin Panel)
 
-### 2. `wallets`
-Stores linked crypto identities.
-- `id`: uuid (primary key)
-- `user_id`: uuid (references profiles.id)
-- `address`: text (wallet address)
-- `chain`: text (e.g., Ethereum)
-- `name`: text (e.g., MetaMask)
+### 2. `requests` (Admin Approval System)
+Tables used for the institutional approval workflow.
+- **`topup_requests`**: Pending fiat-to-crypto purchases.
+- **`swap_requests`**: Pending token-to-token exchanges.
+- **`sell_requests`**: Pending crypto-to-fiat bank withdrawals. Includes `bank_name`, `account_holder`, `iban`, and `swift`.
 
-### 3. `nfts` & `transactions`
-Tables ready for persistent storage of user assets and history.
+### 3. `wallets`, `nfts` & `transactions`
+Persistent storage for user-linked identities, assets, and approved history.
 
 ---
 
 ## Key Implementation Logic
 
 ### 1. Market Data (`use-market-data.ts`)
-- **Dual Providers:** Supports toggling between **CoinGecko** (metadata/stats) and **Alchemy** (direct price feed).
-- **Visibility Detection:** Pauses API calls when the tab is hidden to preserve rate limits.
-- **Rate Limit Protection:** Intelligent cooldown logic and 429 error handling.
-- **Performance:** Heavily memoized (`useMemo`, `useCallback`) to prevent infinite re-render loops common with charting libraries.
+- **Dual Providers:** Toggles between **CoinGecko** and **Alchemy**.
+- **Expanded Mapping:** Includes over 60+ curated assets (BTC, ETH, SOL, USDC, USDT, FET, TAO, etc.) in `SYMBOL_TO_ID` for reliable resolution.
+- **Dynamic Search:** Integrated with CoinGecko Search API for discovering unmapped assets.
 
-### 2. Web3 & Wallet Management
-- **RPC Stability:** Uses dedicated Alchemy endpoints in `wagmi.ts` to bypass CORS issues on public nodes.
-- **Identity:** Uses `useEnsName` to display user's `.eth` names where available.
-- **Linking System:** Users can connect via RainbowKit and then "Authorize" that wallet into the Supabase database for cross-device persistence.
-- **Real-time Stats:** Fetches live ETH balance and live NFT data via Alchemy NFT API.
-- **Modular Logic:** Logic extracted into `useWallets` and `useWeb3Data` hooks for clean component separation.
+### 2. Admin Approval Workflow
+- **State Transition:** Swaps, Sells, and Top-ups are no longer immediate. They insert a "pending" record into the respective request table.
+- **Management Console:** The `AdminPage` features a tabbed interface for reviewing and processing these requests.
+- **Atomicity:** Balance updates and transaction logging occur simultaneously upon admin approval.
 
-### 3. Modular Architecture
-The application has been refactored into a modular, feature-based structure:
-- **Custom Hooks**:
-  - `useTransactions`: Centralizes ledger fetching and real-time synchronization.
-  - `useWallets`: Manages the lifecycle of authorized crypto identities.
-  - `useWeb3Data`: Orchestrates NFT fetching and active connection state.
-- **Component Decomposition**:
-  - Pages like `HistoryPage`, `WalletPage`, and `Web3Page` now act as thin orchestrators.
-  - UI logic is delegated to specialized components in `src/components/features/`.
+### 3. Authentication & Navigation
+- **Security Guards:** `ProtectedRoute` and `SiteShell` enforce strict session checks.
+- **Auto-Redirect:** Immediate redirection to `/login` upon sign-out or session expiry.
+- **Access Control:** Admin routes are guarded by the `is_admin` flag on the user profile.
 
-### 4. Global Search & UI
-- **Top Bar Search**: Fully functional search bar in `SiteShell` that performs live lookups via CoinGecko API.
-- **Metric Cards**: Standardized `MetricCard` system for consistent data visualization across the dashboard and ledger.
+### 4. Modular Architecture
+- **Hooks**: `useMarketData` centralizes price feeds and execution logic. `useAuth` manages the session lifecycle.
+- **UI Components**: Feature-based decomposition (e.g., `src/components/features/admin/`, `src/components/features/swap/`).
 
 ---
 
@@ -75,7 +66,8 @@ Required `.env` keys:
 ---
 
 ## Recent Fixes & Critical Notes
-- **Type Safety**: Eliminated `any` usages across all major features (`Dashboard`, `Market`, `Swap`, `History`, `Web3`), replacing them with specific interfaces in `src/types/`.
-- **CORS Errors**: Resolved by migrating from public nodes to Alchemy-authenticated RPC URLs.
-- **Recharts Loops**: Fixed by ensuring all chart data arrays passed to `LiveAreaChart` have stable references.
-- **Clean UI**: Removed redundant notification buttons and logos to streamline the user experience.
+- **Market Values Fix**: Resolved missing prices by expanding the internal symbol-to-id mapping and fixing CoinGecko Search integration.
+- **Auth Redirects**: Fixed broken sign-out links in both desktop (`SiteShell`) and mobile (`Sidebar`) navigation.
+- **Type Guarding**: Implemented type guards in the Admin Panel to safely handle union types for different request models.
+- **Validation**: Fixed a critical 23502 error in Sell requests by ensuring `swift` and `account_holder` fields are properly collected and passed.
+- **Build Integrity**: Cleaned up React Hook ordering violations and unused interfaces to ensure 100% build success.

@@ -16,6 +16,7 @@ interface SwapCardProps {
   onReceiveTokenSelect?: (coin: CoinGeckoSearchResult) => void;
   onInitiateSwap?: () => Promise<void>;
   ownedAssets?: CoinGeckoSearchResult[];
+  onAddSymbol?: (symbol: string, id?: string) => void;
 }
 
 export function SwapCard({
@@ -30,10 +31,13 @@ export function SwapCard({
   onReceiveTokenSelect,
   onInitiateSwap,
   ownedAssets,
+  onAddSymbol,
 }: SwapCardProps) {
   const [isSwapping, setIsSwapping] = useState(false);
 
   const handleFinalSwap = async () => {
+    onAddSymbol?.(payToken.symbol);
+    onAddSymbol?.(receiveToken.symbol);
     setIsSwapping(true);
     try {
       await onInitiateSwap?.();
@@ -59,6 +63,7 @@ export function SwapCard({
           onAmountChange={setPayAmount} 
           onTokenSelect={onPayTokenSelect}
           tokenList={ownedAssets}
+          onAddSymbol={onAddSymbol}
         />
 
         <div className="relative h-2 flex items-center justify-center">
@@ -76,6 +81,7 @@ export function SwapCard({
           amount={receiveAmount} 
           onTokenSelect={onReceiveTokenSelect}
           isReadOnly 
+          onAddSymbol={onAddSymbol}
         />
 
         <div className="px-4 py-4 bg-[#101417]/50 rounded-2xl space-y-3">

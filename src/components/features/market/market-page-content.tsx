@@ -5,6 +5,7 @@ import { AssetTable } from "./asset-table";
 import { QuickExecutionCard } from "./quick-execution-card";
 import { NetworkStateCard } from "./network-state-card";
 import { TradeModal } from "./trade-modal";
+import { DashboardNotification } from "../dashboard/dashboard-notification";
 
 interface MarketPageContentProps {
   prices: any;
@@ -17,6 +18,7 @@ interface MarketPageContentProps {
   onAddSymbol?: (symbol: string) => void;
   searchSymbol?: (query: string) => Promise<string | null>;
   onTrade: (symbol: string, amount: number) => Promise<void>;
+  lastAction: string | null;
 }
 
 export function MarketPageContent({
@@ -30,6 +32,7 @@ export function MarketPageContent({
   onAddSymbol,
   searchSymbol,
   onTrade,
+  lastAction,
 }: MarketPageContentProps) {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -39,6 +42,8 @@ export function MarketPageContent({
         .font-headline { font-family: 'Space Grotesk', sans-serif; }
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
       `}</style>
+
+      <DashboardNotification lastAction={lastAction} />
 
       {selectedAsset && (
         <TradeModal 
