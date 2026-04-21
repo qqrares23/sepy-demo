@@ -7,15 +7,18 @@ interface TradeModalProps {
   asset: Asset;
   price: number;
   onClose: () => void;
+  onTrade: (symbol: string, amount: number) => Promise<void>;
 }
 
-export const TradeModal = ({ asset, price, onClose }: TradeModalProps) => {
+export const TradeModal = ({ asset, price, onClose, onTrade }: TradeModalProps) => {
   const [amount, setAmount] = useState("");
   const [status, setStatus] = useState<"idle" | "processing" | "success">("idle");
 
-  const handleTrade = () => {
+  const handleTrade = async () => {
+    if (!amount) return;
     setStatus("processing");
-    setTimeout(() => setStatus("success"), 1500);
+    await onTrade(asset.ticker, Number(amount));
+    setStatus("success");
   };
 
   return (

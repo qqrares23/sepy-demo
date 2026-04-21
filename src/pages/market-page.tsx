@@ -11,7 +11,7 @@ export default function MarketPage() {
   const [provider, setProvider] = useState<PriceProvider>('coingecko');
   const [watchedSymbols, setWatchedSymbols] = useState<string[]>(["BTC", "ETH", "SOL", "USDC", "BNB", "XRP", "ADA", "AVAX", "DOGE", "DOT"]);
   
-  const { data, prices, history, loading, refresh, error, searchSymbol } = useMarketData(currency, provider, watchedSymbols);
+  const { data, prices, history, loading, refresh, error, searchSymbol, topUp } = useMarketData(currency, provider, watchedSymbols);
   const [viewMode, setViewMode] = useState<"real-time" | "snapshot">("real-time");
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
 
@@ -118,6 +118,7 @@ export default function MarketPage() {
         assets={assets}
         onAddSymbol={handleAddSymbol}
         searchSymbol={searchSymbol}
+        onTrade={topUp}
       />
     </div>
   );

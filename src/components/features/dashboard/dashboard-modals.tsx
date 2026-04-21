@@ -16,6 +16,7 @@ export const DashboardModals = ({ activeModal, setActiveModal, selectedAsset, tr
     accountName: "",
     bankName: "",
     iban: "",
+    swift: "",
     amount: ""
   });
 
@@ -139,6 +140,15 @@ export const DashboardModals = ({ activeModal, setActiveModal, selectedAsset, tr
                   placeholder="GB12 3456 7890 ..." 
                   value={bankDetails.iban}
                   onChange={e => setBankDetails({...bankDetails, iban: e.target.value})}
+                  className="w-full bg-[#1c2024] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:border-[#ff716c]/50 transition-all" 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-bold text-[#a9abaf] ml-1">SWIFT / BIC Code</label>
+                <input 
+                  placeholder="CHASEUS33 ..." 
+                  value={bankDetails.swift}
+                  onChange={e => setBankDetails({...bankDetails, swift: e.target.value})}
                   className="w-full bg-[#1c2024] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:border-[#ff716c]/50 transition-all" 
                 />
               </div>

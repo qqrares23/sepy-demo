@@ -16,6 +16,7 @@ interface MarketPageContentProps {
   assets: Asset[];
   onAddSymbol?: (symbol: string) => void;
   searchSymbol?: (query: string) => Promise<string | null>;
+  onTrade: (symbol: string, amount: number) => Promise<void>;
 }
 
 export function MarketPageContent({
@@ -28,6 +29,7 @@ export function MarketPageContent({
   assets,
   onAddSymbol,
   searchSymbol,
+  onTrade,
 }: MarketPageContentProps) {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -43,6 +45,7 @@ export function MarketPageContent({
           asset={selectedAsset} 
           price={prices[selectedAsset.ticker as keyof typeof prices] || 0} 
           onClose={() => setSelectedAsset(null)} 
+          onTrade={onTrade}
         />
       )}
 

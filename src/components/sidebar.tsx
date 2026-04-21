@@ -16,7 +16,7 @@ const navItems = [
 ];
 
 export function Sidebar() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [walletCount, setWalletCount] = useState<number>(0);
   const [pendingRequests, setPendingRequests] = useState<number>(0);
 
@@ -187,13 +187,15 @@ export function Sidebar() {
             )}
           </NavLink>
         )}
-        <Link
-          to="/login"
+        <button
+          onClick={async () => {
+            await signOut();
+          }}
           className="flex flex-col items-center justify-center gap-1 px-1 py-2 rounded-2xl transition-all duration-300 shrink-0 min-w-[50px] text-slate-500 hover:text-[#ff716c]"
         >
           <span className="material-symbols-outlined text-xl">logout</span>
           <span className="text-[6px] font-black uppercase tracking-widest">Logout</span>
-        </Link>
+        </button>
       </nav>
     </>
   );

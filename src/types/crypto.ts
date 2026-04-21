@@ -23,6 +23,7 @@ export interface BankDetails {
   accountName: string;
   bankName: string;
   iban: string;
+  swift: string;
   amount: string;
 }
 

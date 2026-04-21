@@ -11,6 +11,7 @@ const SYMBOL_TO_ID: Record<string, string> = {
   "ETH": "ethereum",
   "SOL": "solana",
   "USDC": "usd-coin",
+  "USDT": "tether",
   "BNB": "binancecoin",
   "XRP": "ripple",
   "ADA": "cardano",
@@ -41,9 +42,38 @@ const SYMBOL_TO_ID: Record<string, string> = {
   "RNDR": "render-token",
   "TIA": "celestia",
   "SUI": "sui",
-  "SEI": "sei-network"
-};
-
+  "SEI": "sei-network",
+  "FET": "fetch-ai",
+  "AGIX": "singularitynet",
+  "OCEAN": "ocean-protocol",
+  "TAO": "bittensor",
+  "AKT": "akash-network",
+  "WIF": "dogwifhat",
+  "BONK": "bonk",
+  "FLOKI": "floki",
+  "JUP": "jupiter-exchange-solana",
+  "PYTH": "pyth-network",
+  "ONDO": "ondo-finance",
+  "ENA": "ethena",
+  "PENDLE": "pendle",
+  "GRT": "the-graph",
+  "THETA": "theta-token",
+  "MKR": "maker",
+  "LDO": "lido-dao",
+  "MNT": "mantle",
+  "BEAM": "beam-2",
+  "AAVE": "aave",
+  "VET": "vechain",
+  "ALGO": "algorand",
+  "EGLD": "elrond-erd-2",
+  "QNT": "quant-network",
+  "FLOW": "flow",
+  "AXS": "axie-infinity",
+  "SAND": "the-sandbox",
+  "MANA": "decentraland",
+  "IMX": "immutable-x",
+  "CHZ": "chiliz",
+  };
 export interface MarketData {
   id: string;
   symbol: string;
@@ -266,8 +296,7 @@ export function useMarketData(
     if (!user) { setLastAction("Please log in"); return; }
     const upperFrom = fromSymbol.toUpperCase();
     const upperTo = toSymbol.toUpperCase();
-    setLastAction(`Exchanging ${upperFrom} for ${upperTo}...`);
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    setLastAction(`Submitting swap request: ${upperFrom} to ${upperTo}...`);
 
     const currentFromAmount = holdings[upperFrom] || 0;
     if (currentFromAmount < fromAmount) {
@@ -277,38 +306,33 @@ export function useMarketData(
     }
 
     const usdValue = fromAmount * (prices[upperFrom] || 0);
-    const newFrom = currentFromAmount - fromAmount;
-    const newTo = (holdings[upperTo] || 0) + toAmount;
-
-    await supabase.from('holdings').upsert({ user_id: user.id, symbol: upperFrom, amount: newFrom }, { onConflict: 'user_id, symbol' });
-    await supabase.from('holdings').upsert({ user_id: user.id, symbol: upperTo, amount: newTo }, { onConflict: 'user_id, symbol' });
     
-    // Log unified transaction
-    await supabase.from('transactions').insert({
+    const { error } = await supabase.from('swap_requests').insert({
       user_id: user.id,
-      type: 'Swap',
-      asset: `${upperFrom} → ${upperTo}`,
-      symbol: upperFrom,
-      amount: `-${fromAmount} ${upperFrom} / +${toAmount.toFixed(4)} ${upperTo}`,
-      value: `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+      user_email: user.email,
+      user_name: user.full_name || null,
+      from_symbol: upperFrom,
+      to_symbol: upperTo,
+      from_amount: fromAmount,
+      to_amount: toAmount,
       usd_value: usdValue,
-      status: 'Completed',
-      from: 'Vault Wallet',
-      to: 'Uniswap Protocol'
+      status: 'pending',
     });
 
-    setHoldings(prev => ({ ...prev, [upperFrom]: newFrom, [upperTo]: newTo }));
-    setLastAction(`Swap Complete: Received ${toAmount.toFixed(4)} ${upperTo}`);
-    setTimeout(() => setLastAction(null), 4000);
+    if (!error) {
+      setLastAction(`Swap request submitted — awaiting admin approval`);
+    } else {
+      console.error("Swap request error:", error);
+      setLastAction("Swap request failed. Please try again.");
+    }
+    setTimeout(() => setLastAction(null), 5000);
   };
 
   const sellAsset = async (symbol: string, amount: number, bankDetails: BankDetails) => {
     if (!user) { setLastAction("Please log in"); return; }
     const upperSymbol = symbol.toUpperCase();
-    setLastAction(`Processing Sell Order for ${upperSymbol}...`);
+    setLastAction(`Submitting sell request for ${upperSymbol}...`);
     
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
     const currentAmount = holdings[upperSymbol] || 0;
     if (currentAmount < amount) {
       setLastAction("Insufficient balance to sell");
@@ -317,39 +341,28 @@ export function useMarketData(
     }
 
     const usdValue = amount * (prices[upperSymbol] || 0);
-    const newAmount = currentAmount - amount;
 
-    // Update holdings
-    const { error: updateError } = await supabase
-      .from('holdings')
-      .upsert({ user_id: user.id, symbol: upperSymbol, amount: newAmount }, { onConflict: 'user_id, symbol' });
+    const { error } = await supabase.from('sell_requests').insert({
+      user_id: user.id,
+      user_email: user.email,
+      user_name: user.full_name || null,
+      symbol: upperSymbol,
+      amount,
+      usd_value: usdValue,
+      bank_name: bankDetails.bankName,
+      account_holder: bankDetails.accountName,
+      iban: bankDetails.iban,
+      swift: bankDetails.swift,
+      status: 'pending',
+    });
 
-    if (!updateError) {
-      // Record transaction with error check
-      const { error: txError } = await supabase.from('transactions').insert({
-        user_id: user.id,
-        type: 'Sell',
-        asset: upperSymbol === 'BTC' ? 'Bitcoin' : upperSymbol === 'ETH' ? 'Ethereum' : upperSymbol,
-        symbol: upperSymbol,
-        amount: `-${amount} ${upperSymbol}`,
-        value: `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-        usd_value: usdValue,
-        status: 'Completed',
-        from: 'Vault Wallet',
-        to: `${bankDetails.bankName} (****${bankDetails.iban.slice(-4)})`
-      });
-
-      if (txError) {
-        console.error("Failed to log transaction:", txError);
-      }
-
-      setHoldings(prev => ({ ...prev, [upperSymbol]: newAmount }));
-      setLastAction(`Sell Successful: $${usdValue.toLocaleString()} sent to bank`);
+    if (!error) {
+      setLastAction(`Sell request submitted — awaiting admin approval`);
     } else {
-      console.error("Holdings update error:", updateError);
-      setLastAction("Sell Failed");
+      console.error("Sell request error:", error);
+      setLastAction("Sell request failed. Please try again.");
     }
-    setTimeout(() => setLastAction(null), 4000);
+    setTimeout(() => setLastAction(null), 5000);
   };
 
   return { 

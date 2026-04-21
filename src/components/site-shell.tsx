@@ -8,18 +8,17 @@ import { NotificationBell } from "@/components/features/notifications/notificati
 import { useAuth } from "@/hooks/use-auth"
 
 export function SiteShell() {
-  const { user, loading } = useAuth()
-
-  // Second-layer guard — ProtectedRoute in the router is the first layer.
-  // This catches any race-through while Supabase resolves the session.
-  if (!loading && !user) return <Navigate to="/login" replace />
-
+  const { user, loading, signOut } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<CoinGeckoSearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const navigate = useNavigate()
   const searchRef = useRef<HTMLDivElement>(null)
+
+  // Second-layer guard — ProtectedRoute in the router is the first layer.
+  // This catches any race-through while Supabase resolves the session.
+  if (!loading && !user) return <Navigate to="/login" replace />
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -125,12 +124,14 @@ export function SiteShell() {
           <Link to="/wallets" className="inline-flex h-11 w-11 items-center justify-center rounded-3xl bg-slate-950/80 text-slate-400 hover:text-cyan-300 transition-colors">
             <span className="material-symbols-outlined">account_balance_wallet</span>
           </Link>
-          <Link
-            to="/login"
+          <button
+            onClick={async () => {
+              await signOut();
+            }}
             className="hidden rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-300 hover:text-cyan-200 md:inline-flex"
           >
             Sign out
-          </Link>
+          </button>
         </div>
       </header>
 
